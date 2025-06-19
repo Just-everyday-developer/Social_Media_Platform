@@ -55,15 +55,20 @@ class AuthService {
     try {
       const clientId = 'Ov23liFmPODNabDHnFIw';
       const clientSecret = '950ea61e9abf3e6df327e97e8104cbef5b0c857e';
-      const redirectUrl = 'https://social-media-platform-34794.firebaseapp.com/__/auth/handler';
+
+      const redirectUrl = 'fluttergithulogin://callback';
 
       final url = 'https://github.com/login/oauth/authorize?client_id=$clientId&redirect_uri=$redirectUrl&scope=read:user%20user:email';
 
       final result = await FlutterWebAuth2.authenticate(
-          url: url, callbackUrlScheme: "https");
-      final code = Uri
-          .parse(result)
-          .queryParameters['code'];
+          url: url, callbackUrlScheme: "fluttergithulogin");
+
+      final code = Uri.parse(result).queryParameters['code'];
+
+      if (code == null) {
+        print("GitHub Sign-In error: Authorization code not found in callback. Result: $result");
+        return null;
+      }
 
       final response = await http.post(
         Uri.parse("https://github.com/login/oauth/access_token"),
@@ -71,11 +76,23 @@ class AuthService {
         body: {
           "client_id": clientId,
           "client_secret": clientSecret,
-          "code": code!,
+          "code": code,
         },
       );
 
-      final accessToken = json.decode(response.body)["access_token"];
+      if (response.statusCode != 200) {
+        print("GitHub Sign-In error: Failed to get access token. Status: ${response.statusCode}, Body: ${response.body}");
+        return null;
+      }
+
+      final responseBody = json.decode(response.body);
+      final accessToken = responseBody["access_token"] as String?;
+
+      if (accessToken == null) {
+        print("GitHub Sign-In error: Access token not found in response. Body: ${response.body}");
+        return null;
+      }
+
       final githubAuthCredential = GithubAuthProvider.credential(accessToken);
       return await _auth.signInWithCredential(githubAuthCredential);
     } catch (e) {

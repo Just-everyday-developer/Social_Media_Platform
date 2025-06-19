@@ -1,29 +1,36 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:social_media_platform/pages/home_screen.dart';
+import 'package:social_media_platform/pages/main_screen.dart';
+import 'package:social_media_platform/models/Post.dart';
+import 'dart:convert';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    appBar: AppBar(
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back),
-        onPressed: () => context.go("/home"),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context)
+        ),
       ),
-    ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             const CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage('assets/avatar.jpg')
+              backgroundImage: AssetImage('assets/avatar.jpg'),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Талгат',
+            Text(
+              currentUser?.email ?? "Anonymous",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -42,26 +49,23 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings, color: Colors.deepPurple),
-              title: const Text('Settings'),
-              onTap: () {
-                context.go('/settings');
-              },
+            AnimatedListTile(
+              icon: Icons.settings,
+              title: 'Settings',
+              onTap: () => context.go('/settings'),
+              color: Colors.deepPurple,
             ),
-            ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.pink),
-              title: const Text('Favorite'),
-              onTap: () {
-                context.go('/favorites');
-              },
+            AnimatedListTile(
+              icon: Icons.favorite,
+              title: 'Favorite',
+              onTap: () => context.go('/favorites'),
+              color: Colors.pink,
             ),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text('Exit'),
-              onTap: () {
-                context.go("/login");
-              },
+            AnimatedListTile(
+              icon: Icons.logout,
+              title: 'Exit',
+              onTap: () => context.go("/login"),
+              color: Colors.redAccent,
             ),
           ],
         ),
@@ -79,6 +83,48 @@ class ProfilePage extends StatelessWidget {
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(color: Colors.grey)),
       ],
+    );
+  }
+}
+
+class AnimatedListTile extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final Color color;
+
+  const AnimatedListTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    required this.color,
+    super.key,
+  });
+
+  @override
+  _AnimatedListTileState createState() => _AnimatedListTileState();
+}
+
+class _AnimatedListTileState extends State<AnimatedListTile> {
+  bool _isTapped = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isTapped = true),
+      onTapUp: (_) {
+        setState(() => _isTapped = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isTapped = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        color: _isTapped ? widget.color.withOpacity(0.2) : Colors.transparent,
+        child: ListTile(
+          leading: Icon(widget.icon, color: widget.color),
+          title: Text(widget.title),
+        ),
+      ),
     );
   }
 }

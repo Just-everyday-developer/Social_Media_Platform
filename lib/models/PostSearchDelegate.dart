@@ -32,23 +32,27 @@ class PostSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    final results = posts.where((post) =>
-    post.title.toLowerCase().contains(query.toLowerCase())
-        || post.subtitle.toLowerCase().contains(query.toLowerCase())
-    ).toList();
+    final results = posts.where((post) {
+      final q = query.toLowerCase();
+      return post.title.toLowerCase().contains(q) ||
+          post.subtitle.toLowerCase().contains(q);
+    }).toList();
 
-    return ListView.builder(
+    return results.isEmpty
+        ? Center(child: Text('No posts found'))
+        : ListView.builder(
       itemCount: results.length,
-      itemBuilder: (context, index) {
-        final post = results[index];
+      itemBuilder: (c, i) {
+        final post = results[i];
         return ListTile(
           title: Text(post.title),
           subtitle: Text(post.subtitle),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (_) => PostPage(post: post),
-            ));
-          },
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PostPage(),
+            ),
+          ),
         );
       },
     );
@@ -56,6 +60,6 @@ class PostSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return buildResults(context); // или можно сделать live-подсказки отдельно
+    return buildResults(context); 
   }
 }

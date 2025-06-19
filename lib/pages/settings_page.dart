@@ -3,34 +3,33 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:social_media_platform/settings/theme_provider.dart';
 import 'package:social_media_platform/settings/font_slider.dart';
+import '../generated/l10n.dart';        
+
+import '../settings/locale_provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<LocaleProvider>();
     return Scaffold(
-        appBar: AppBar(title: Text(
-            'Settings',
-            style: GoogleFonts.acme(fontSize: Provider.of<FontSlider>(context).sliderFontValue),
-          )
-        ),
         body: Column(
           children: [
-                SwitchListTile( // кнопка с переключением плюс текст
+                SwitchListTile( 
                   title: Text(
-                    "Dark Theme",
+                    S.of(context).dark_theme,
                     style: GoogleFonts.openSans(fontSize: Provider.of<FontSlider>(context).sliderFontValue),
                   ),
-                  value: Provider.of<ThemeProvider>(context).isDarkTheme, // true - включено, false - нет
-                  // Provider.of<T>(context) - позволяет дочерним классам использовать параметры и методы созданного экземпляра
+                  value: Provider.of<ThemeProvider>(context).isDarkTheme, 
+                  
                   onChanged: (value) {
-                    Provider.of<ThemeProvider>(context, listen: false).toggleTheme(); // listen: true вызывает ошибку
+                    Provider.of<ThemeProvider>(context, listen: false).toggleTheme(); 
                   }
                 ),
                 Column (
                   children: [
-                    Text("The font size", style: TextStyle(fontSize: Provider.of<FontSlider>(context).sliderFontValue)),
+                    Text(S.of(context).font_size, style: TextStyle(fontSize: Provider.of<FontSlider>(context).sliderFontValue)),
                     Slider(
                         label: Provider.of<FontSlider>(context).sliderFontValue.toInt().toString(),
                         min: 10,
@@ -42,8 +41,34 @@ class SettingsPage extends StatelessWidget {
                         }
                     )
                   ],
-                )
-                
+                ),
+            const Divider(),
+            ListTile(
+              title: Text(S.of(context).language),
+              trailing: DropdownButton<Locale>(
+                value: provider.locale,
+                items: L10n.supportedLocales.map((locale) {
+                  final flag = {
+                    'en': '🇬🇧',
+                    'ru': '🇷🇺',
+                    'kk': '🇰🇿',
+                  }[locale.languageCode];
+                  final name = {
+                    'en': 'English',
+                    'ru': 'Русский',
+                    'kk': 'Қазақша',
+                  }[locale.languageCode];
+                  return DropdownMenuItem(
+                    value: locale,
+                    child: Text('$flag  $name'),
+                  );
+                }).toList(),
+                onChanged: (Locale? newLocale) {
+                  if (newLocale != null) {
+                    provider.setLocale(newLocale);
+                  }
+                }),
+            ),
           ]
       )
     );

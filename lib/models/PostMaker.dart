@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'Post.dart';
+import 'package:social_media_platform/models/Post.dart';
+import 'package:social_media_platform/services/firebase_post_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PostMaker extends StatefulWidget {
-  const PostMaker({super.key});
+  final Post? initialPost;
+  final String? postId; 
+
+  const PostMaker({super.key, this.initialPost, this.postId});
 
   @override
   _PostMakerState createState() => _PostMakerState();
@@ -16,37 +19,89 @@ class _PostMakerState extends State<PostMaker> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+  final TextEditingController _subtitleController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
+  final FirebasePostService _postService = FirebasePostService();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    if (widget.initialPost != null) {
+      _titleController.text = widget.initialPost!.title;
+      _subtitleController.text = widget.initialPost!.subtitle;
+      _contentController.text = widget.initialPost!.content;
+      _imageUrlController.text = widget.initialPost!.imageUrl ?? '';
+    }
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _subtitleController.dispose();
     _imageUrlController.dispose();
     super.dispose();
   }
 
-  void _savePost(BuildContext context) async {
+
+  Future<void> _savePost(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final prefs = await SharedPreferences.getInstance();
-      final postsJson = prefs.getStringList('posts') ?? [];
+      setState(() {
+        _isLoading = true;
+      });
 
-      final newPost = Post(
-        title: _titleController.text,
-        subtitle: _contentController.text,
-        imageUrl: _imageUrlController.text,
-        createdAt: DateTime.now(),
-      );
+      try {
+        final User? currentUser = FirebaseAuth.instance.currentUser;
+        final String authorName = currentUser?.displayName ?? 'Anonymous';
+        final String authorAvatar = currentUser?.photoURL ?? '';
 
-      postsJson.add(json.encode(newPost.toJson()));
-      await prefs.setStringList('posts', postsJson);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post created successfully!')),
+        final Post newPost = Post(
+          id: widget.initialPost?.id,
+          title: _titleController.text.trim(),
+          subtitle: _subtitleController.text.trim(),
+          content: _contentController.text.trim(),
+          createdAt: widget.initialPost?.createdAt ?? DateTime.now(),
+          likes: widget.initialPost?.likes ?? 0,
+          comments: widget.initialPost?.comments ?? [],
+          commentCount: widget.initialPost?.commentCount ?? 0,
+          imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
+          authorName: authorName,
+          authorAvatar: authorAvatar,
         );
-        // Return true to indicate successful post creation
-        Navigator.of(context).pop(true);
+
+        if (widget.initialPost == null) {
+          
+          
+          await _postService.addPost(newPost); 
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Post created successfully!')),
+          );
+        } else {
+          
+          if (widget.postId != null) {
+            
+            await _postService.updatePost(widget.postId!, newPost); 
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Post updated successfully!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error: Cannot update post without ID.')),
+            );
+          }
+        }
+        context.pop(true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save post: $e')),
+        );
+        print('Save Post Error: $e'); 
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -65,7 +120,7 @@ class _PostMakerState extends State<PostMaker> {
               children: [
                 Center(
                   child: Text(
-                    "Create a new post",
+                    widget.initialPost != null ? "Edit Post" : "Create a new post", 
                     style: GoogleFonts.roboto(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -83,6 +138,21 @@ class _PostMakerState extends State<PostMaker> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _subtitleController,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    labelText: "Subtitle",
+                    labelStyle: GoogleFonts.roboto(fontSize: 15),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a subtitle';
                     }
                     return null;
                   },
@@ -127,9 +197,18 @@ class _PostMakerState extends State<PostMaker> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: () => _savePost(context),
-                      child: Text(
-                        "Save Post",
+                      onPressed: _isLoading ? null : () => _savePost(context),
+                      child: _isLoading
+                          ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                          : Text(
+                        widget.initialPost != null ? "Update Post" : "Save Post", 
                         style: GoogleFonts.roboto(fontSize: 16),
                       ),
                     ),

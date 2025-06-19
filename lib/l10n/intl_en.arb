@@ -1,0 +1,178 @@
+{
+  "@@locale": "en",
+  "title": "My Social Media Platform",
+  "settings": "Settings",
+  "home": "Home",
+  "notifications": "Notifications",
+  "actions": "Actions",
+  "search": "Search",
+  "profile": "Profile",
+  "map": "Map",
+  "videos": "Videos",
+  "news": "News",
+  "cancel": "Cancel",
+  "main_screen_snackbar": "Search functionality for posts is not yet integrated with Firebase",
+  "greeting": "Hello",
+  "user": "User",
+  "login_signup": "Login / Sign up",
+  "search_location": "Search Location",
+  "address_hint_text": "Enter address to search",
+  "messages": "Messages",
+  "dark_theme": "Dark Theme",
+  "font_size": "The font size",
+  "language": "Language",
+  "subscribers": "Subscribers",
+  "answers": "Answers",
+  "reposts": "Reposts",
+  "showing": "Showing",
+  "more_info": "Tap for more info",
+  "denied_permissions": "Location permissions are denied",
+  "permanently_denied_permissions": "Location permissions are permanently denied, please enable them in settings",
+  "your_location": "Your Location",
+  "search_for_location": "Search for a location",
+  "you_are_here": "You are here",
+  "error_getting_location": "Error getting location",
+  "searched_location": "Searched location",
+  "not_find_location": "Could not find location",
+  "additional_info": "This is additional information about this location",
+  "close": "Close",
+  "new_location": "New Location",
+  "added_by_tapping": "Added by tapping",
+  "current_address": "Current Address",
+  "enter_address_to_search": "Enter address to search",
+  "enter_page_error_message": "Invalid email or password",
+  "enter_page_google_sign_in_error": "Google sign-in failed",
+  "enter_page_github_sign_in_error": "Github sign-in failed",
+  "successful_login": "Login Successful!",
+  "welcome_back": "Welcome Back",
+  "msg_enter_email": "Please enter your email",
+  "msg_enter_valid_email": "Please enter a valid email",
+  "password": "Password",
+  "msg_enter_password": "Please enter your password",
+  "msg_enter_long_password": "Password must be at least 6 characters",
+  "remember_me": "Remember Me",
+  "forgot_password": "Forgot Password?",
+  "login": "Log In",
+  "or_continue_with": "or continue with",
+  "not_have_account": "Don't have an account?",
+  "register": "Register",
+  "news_page_title": "News",
+  "tab_headlines": "Headlines",
+  "tab_search": "Search",
+  "tab_categories": "Categories",
+  "top_headlines_label": "Top Headlines",
+  "hint_search_news": "Search news...",
+  "error_something_wrong": "Something went wrong",
+  "button_retry": "Retry",
+  "no_articles_found": "No articles found",
+  "opening_message": "Opening: {title}",
+  "category_technology": "Technology",
+  "category_sports": "Sports",
+  "category_business": "Business",
+  "category_health": "Health",
+  "category_science": "Science",
+  "category_entertainment": "Entertainment",
+  "@opening_message": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "actionsPageTitle": "Actions",
+  "postManagementSectionTitle": "Post Management",
+  "sortPostsCardTitle": "Sort Posts",
+  "sortPostsCardSubtitle": "Sort posts by date or alphabetically",
+  "quickActionsSectionTitle": "Quick Actions",
+  "newPostButtonTitle": "New Post",
+  "searchButtonTitle": "Search",
+  "refreshButtonTitle": "Refresh",
+  "refreshSnackbarMessage": "Posts are automatically refreshed in real-time",
+  "settingsButtonTitle": "Settings",
+  "statisticsSectionTitle": "Statistics",
+  "totalPostsLabel": "Total Posts",
+  "totalLikesLabel": "Total Likes",
+  "commentsLabel": "Comments",
+  "loadingText": "Loading...",
+  "footerText": "Manage your social media experience",
+  "notificationsTitle": "Notifications",
+  "markAllAsReadTooltip": "Mark all as read",
+  "clearAllMenuItem": "Clear all",
+  "showUnreadOnly": "Show unread only",
+  "totalNotifications": "Total",
+  "unreadNotifications": "Unread",
+  "todayNotifications": "Today",
+  "noUnreadNotifications": "No unread notifications",
+  "allCaughtUpMessage": "All caught up! You have no unread notifications.",
+  "noNotificationsYet": "No notifications yet",
+  "noNotificationsMessage": "When you receive notifications, they'll appear here.",
+  "messageType": "Message",
+  "systemType": "System Update",
+  "reminderType": "Reminder",
+  "promotionType": "Special Offer",
+  "securityType": "Security Alert",
+  "welcomeType": "Welcome",
+  "timeAgoDays": "{days}d ago",
+  "@timeAgoDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "timeAgoHours": "{hours}h ago",
+  "@timeAgoHours": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "timeAgoMinutes": "{minutes}m ago",
+  "@timeAgoMinutes": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "justNow": "Just now",
+  "markAsUnread": "Mark as unread",
+  "markAsRead": "Mark as read",
+  "deleteNotification": "Delete",
+  "clearAllNotificationsTitle": "Clear All Notifications",
+  "clearAllNotificationsContent": "Are you sure you want to delete all notifications? This action cannot be undone.",
+  "cancelButton": "Cancel",
+  "clearAllButton": "Clear All",
+  "notificationWelcomeTitle": "Welcome to the app!",
+  "notificationWelcomeMessage": "Thanks for joining us. Explore all the amazing features we have to offer.",
+  "notificationMessageTitle": "New message received",
+  "notificationMessageBody": "{senderName} sent you a message: \"{messageContent}\"",
+  "@notificationMessageBody": {
+    "placeholders": {
+      "senderName": {},
+      "messageContent": {}
+    }
+  },
+  "notificationSystemTitle": "System Update",
+  "notificationSystemMessage": "Your app has been updated to version {version}. Check out the new features!",
+  "@notificationSystemMessage": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "notificationReminderTitle": "Reminder",
+  "notificationReminderMessage": "Don't forget about your meeting at {time} today.",
+  "@notificationReminderMessage": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "notificationPromotionTitle": "Special Offer",
+  "notificationPromotionMessage": "Get {discount}% off on premium subscription. Limited time offer!",
+  "@notificationPromotionMessage": {
+    "placeholders": {
+      "discount": {}
+    }
+  },
+  "notificationSecurityTitle": "Security Alert",
+  "notificationSecurityMessage": "New login detected from {browser} on {os}. Was this you?",
+  "@notificationSecurityMessage": {
+    "placeholders": {
+      "browser": {},
+      "os": {}
+    }
+  }
+}

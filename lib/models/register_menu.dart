@@ -1,7 +1,9 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:social_media_platform/utils/text_utils.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterMenu extends StatefulWidget {
   const RegisterMenu({super.key});
@@ -19,6 +21,8 @@ class _RegisterMenuState extends State<RegisterMenu> {
   bool rememberMe = false;
   bool obscurePassword = true;
   bool acceptTerms = false;
+  bool _isLoading = false; 
+  String? _errorMessage; 
 
   String email = '';
   String password = '';
@@ -28,6 +32,48 @@ class _RegisterMenuState extends State<RegisterMenu> {
     emailCtrl.dispose();
     passwordCtrl.dispose();
     super.dispose();
+  }
+
+  
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must accept terms')),
+      );
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+      if (mounted) {
+        Navigator.pop(context); 
+        context.go("/home");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful!')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -54,8 +100,7 @@ class _RegisterMenuState extends State<RegisterMenu> {
                     icon: Icons.mail,
                     keyboardType: TextInputType.emailAddress,
                     controller: emailCtrl,
-                    validator: (val) =>
-                    val != null && !EmailValidator.validate(val)
+                    validator: (val) => val != null && !EmailValidator.validate(val)
                         ? 'Enter a valid email'
                         : null,
                     onSaved: (val) => email = val!,
@@ -88,40 +133,37 @@ class _RegisterMenuState extends State<RegisterMenu> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  if (_errorMessage != null) 
+                    TextUtil(
+                      text: _errorMessage!,
+                      size: 12,
+                      color: Colors.red,
+                    ),
                   const SizedBox(height: 15),
                   GestureDetector(
-                    onTap: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (!acceptTerms) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('You must accept terms')),
-                          );
-                          return;
-                        }
-                        _formKey.currentState!.save();
-
-                        // ✅ Точка действия после валидации
-                        debugPrint("Email: $email");
-                        debugPrint("Password: $password");
-
-                        // Тут можешь вставить переход, API вызов, Firebase и т.п.
-                      }
-                    },
+                    onTap: _isLoading ? null : _register, 
                     child: Container(
                       height: 45,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: _isLoading
+                            ? Colors.white.withOpacity(0.5)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(25),
                       ),
                       alignment: Alignment.center,
-                      child: TextUtil(
-                          text: "Sign Up",
-                          color: Colors.black,
-                          weight: true),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(
+                        color: Colors.black,
+                      )
+                          : TextUtil(
+                        text: "Sign Up",
+                        color: Colors.black,
+                        weight: true,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -154,9 +196,7 @@ class _RegisterMenuState extends State<RegisterMenu> {
         suffixIcon: isPassword
             ? IconButton(
           icon: Icon(
-            obscurePassword
-                ? Icons.visibility_off
-                : Icons.visibility,
+            obscurePassword ? Icons.visibility_off : Icons.visibility,
             color: Colors.white,
           ),
           onPressed: () =>

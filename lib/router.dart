@@ -10,6 +10,8 @@ import 'package:social_media_platform/pages/notifications_page.dart';
 import 'package:social_media_platform/pages/post_page.dart';
 import 'package:social_media_platform/pages/settings_page.dart';
 import 'package:social_media_platform/models/Post.dart';
+import 'package:social_media_platform/route_transitions.dart';
+import 'package:social_media_platform/post_detail.dart'; 
 
 final GoRouter router = GoRouter(
   initialLocation: '/home',
@@ -21,26 +23,93 @@ final GoRouter router = GoRouter(
         return MainScreen();
       },
       routes: [
-        GoRoute(path: '/home', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/notifications', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/favorites', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/settings', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/actions', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/map', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/news', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/videos', builder: (context, state) => const SizedBox.shrink()),
-        GoRoute(path: '/post/:id', builder: (context, state) => const SizedBox.shrink()),
-      ],
+        GoRoute(
+          path: '/home',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const HomeScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/notifications',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/favorites',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/settings',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/actions',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/map',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/videos',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+          path: '/news',
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: const SizedBox.shrink(),
+          ),
+        ),
+        GoRoute(
+            path: '/profile',
+            pageBuilder: (context, index) => NoTransitionPage(
+              child: const SizedBox.shrink(),
+            )
+        )],
     ),
+    
     GoRoute(
       path: '/post/:id',
-      builder: (context, state) {
-        final post = state.extra as Post?;
+      pageBuilder: (context, state) {
         final id = state.pathParameters['id'] ?? '0';
 
-        return PostPage(post: post!);
+        return CustomTransitionPage(
+          child: PostDetailPage(postId: id), 
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 0.3),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+        );
       },
     ),
-    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    
+    GoRoute(
+      path: '/login',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const LoginPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    ),
   ],
 );

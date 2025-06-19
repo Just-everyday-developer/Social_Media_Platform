@@ -1,62 +1,89 @@
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Post {
-  String title;
-  String subtitle;
+  String? id;
+  final String title;
+  final String subtitle;
+  final String content;
+  DateTime? createdAt;
+  int likes;
+  List<String> comments; 
+  int? commentCount;
   String? imageUrl;
   String? authorName;
   String? authorAvatar;
-  DateTime? createdAt;
-  List<String>? tags;
-  String? content;
-  int? likes;
-  int? commentCount;
 
   Post({
+    this.id,
     required this.title,
     required this.subtitle,
+    required this.content,
+    this.createdAt,
+    this.likes = 0,
+    this.comments = const [],
+    this.commentCount,
     this.imageUrl,
     this.authorName,
     this.authorAvatar,
-    this.createdAt,
-    this.tags,
-    this.content,
-    this.likes,
-    this.commentCount = 0,
   });
 
 
-  Map<String, dynamic> toJson() => {
-    'title': title,
-    'subtitle': subtitle,
-    'imageUrl': imageUrl,
-    'authorName': authorName,
-    'authorAvatar': authorAvatar,
-    'createdAt': createdAt?.toIso8601String(),
-    'tags': tags,
-    'content': content,
-    'likes': likes,
-    'commentCount': commentCount,
-  };
+  Map<String, dynamic> toFirestore() {
+    return {
+      'title': title,
+      'subtitle': subtitle,
+      'content': content,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'likes': likes,
+      'comments': comments,
+      'commentCount': commentCount ?? comments.length,
+      'imageUrl': imageUrl,
+      'authorName': authorName,
+      'authorAvatar': authorAvatar,
+    };
+  }
 
-  factory Post.fromJson(Map<String, dynamic> json) {
-    DateTime? createdAt;
-    try {
-      createdAt = json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null;
-    } catch (e) {
-      print("Error parsing date: $e");
-      createdAt = null;
-    }
+  
+  
+  
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'subtitle': subtitle,
+      'content': content,
+      'createdAt': createdAt?.toIso8601String(), 
+      'likes': likes,
+      'comments': comments,
+      'commentCount': commentCount ?? comments.length,
+      'imageUrl': imageUrl,
+      'authorName': authorName,
+      'authorAvatar': authorAvatar,
+    };
+  }
 
+
+  
+  factory Post.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Post(
-      title: json['title'] ?? '',
-      subtitle: json['subtitle'] ?? '',
-      imageUrl: json['imageUrl'],
-      authorName: json['authorName'],
-      authorAvatar: json['authorAvatar'],
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
-      content: json['content'],
-      likes: json['likes'],
-      commentCount: json['commentCount'] ?? 0,
+      id: doc.id,
+      title: data['title'] ?? '',
+      subtitle: data['subtitle'] ?? '',
+      content: data['content'] ?? '',
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : null, 
+      likes: data['likes'] ?? 0,
+      comments: (data['comments'] is List)
+          ? List<String>.from(data['comments'])
+          : [], 
+      commentCount: data['commentCount'] ?? 0,
+      imageUrl: data['imageUrl'],
+      authorName: data['authorName'],
+      authorAvatar: data['authorAvatar'],
     );
   }
+
+
 }

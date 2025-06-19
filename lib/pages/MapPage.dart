@@ -6,6 +6,11 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart' as lottie;
+import 'package:permission_handler/permission_handler.dart';
+
+import '../generated/l10n.dart';
+
 
 class MapPage extends StatefulWidget {
   const MapPage({Key? key}) : super(key: key);
@@ -15,51 +20,54 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  // Google Maps Controller
   final Completer<GoogleMapController> _controller = Completer();
 
-  // Default camera position (San Francisco)
+  
   CameraPosition _initialCameraPosition = const CameraPosition(
     target: LatLng(37.7749, -122.4194),
     zoom: 12,
   );
 
-  // Set of markers
+  
   Set<Marker> _markers = {};
 
-  // Location data
+  
   Position? _currentPosition;
   String _currentAddress = '';
   bool _isLoading = false;
 
-  // Custom marker icons
+  
   BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
 
   @override
   void initState() {
     super.initState();
-    _loadCustomMarker();
-    _createInitialMarkers();
-    _getCurrentLocation();
-  }
-
-  // Task 2: Creating custom marker icon
-  Future<void> _loadCustomMarker() async {
-    customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/marker_icon.png',
-    ).catchError((error) {
-      // Fallback to default marker if custom one fails to load
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCustomMarker();
+      _createInitialMarkers();
+      _getCurrentLocation();
     });
+  }
 
-    // Update markers with new icon
+  
+  Future<void> _loadCustomMarker() async {
+    try {
+      customMarkerIcon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(size: Size(48, 48)),
+        'assets/marker_icon.png',
+      );
+    } catch (error) {
+      
+      customMarkerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    }
+
+    
     _createInitialMarkers();
   }
 
-  // Task 2: Create predefined markers
+  
   void _createInitialMarkers() {
-    // Creating predefined locations
+    
     final locations = [
       {'id': '1', 'title': 'San Francisco', 'position': const LatLng(37.7749, -122.4194)},
       {'id': '2', 'title': 'Golden Gate Bridge', 'position': const LatLng(37.8199, -122.4783)},
@@ -73,11 +81,11 @@ class _MapPageState extends State<MapPage> {
           position: location['position'] as LatLng,
           infoWindow: InfoWindow(
             title: location['title'] as String,
-            snippet: 'Tap for more info',
+            snippet: S.of(context).more_info,
           ),
           icon: customMarkerIcon,
           onTap: () {
-            // Handle marker tap
+            
             _showLocationInfo(location['title'] as String);
           },
         );
@@ -85,37 +93,41 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // Task 3: Implement location services
+  
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoading = true);
 
-    // 1. Request location permission
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+    try {
+      
+      LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permissions are denied')),
-        );
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text(S.of(context).denied_permissions)),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+              content: Text(S.of(context).permanently_denied_permissions),
+            ),
+          );
+        }
         setState(() => _isLoading = false);
         return;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permissions are permanently denied, please enable them in settings'),
-        ),
-      );
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    // 2. Get current position
-    try {
+      
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -123,36 +135,39 @@ class _MapPageState extends State<MapPage> {
       setState(() {
         _currentPosition = position;
 
-        // Add current location marker
+        
         _markers.add(
           Marker(
             markerId: const MarkerId('currentLocation'),
             position: LatLng(position.latitude, position.longitude),
-            infoWindow: const InfoWindow(
-              title: 'Your Location',
-              snippet: 'You are here',
+            infoWindow:  InfoWindow(
+              title: S.of(context).your_location,
+              snippet: S.of(context).you_are_here,
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
           ),
         );
       });
 
-      // 3. Update camera position to user's location
-      _goToCurrentLocation();
+      await _goToCurrentLocation();
 
-      // 4. Get address from coordinates (Task 5: Geocoding)
-      _getAddressFromLatLng(position);
+      await _getAddressFromLatLng(position);
+
     } catch (e) {
       print('Error getting location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error getting location: $e')),
-      );
-    }
-
-    setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${S.of(context).error_getting_location} ${e}")),
+        );
+      }
+    }  finally {
+       if (mounted) {
+         setState(() => _isLoading = false);
+       }
+     }
   }
 
-  // Task 4: Move camera to current location
+  
   Future<void> _goToCurrentLocation() async {
     if (_currentPosition != null) {
       final GoogleMapController controller = await _controller.future;
@@ -161,11 +176,11 @@ class _MapPageState extends State<MapPage> {
         zoom: 15,
       );
 
-      controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
+      await controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
     }
   }
 
-  // Task 5: Geocoding - Get address from coordinates
+  
   Future<void> _getAddressFromLatLng(Position position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -175,24 +190,28 @@ class _MapPageState extends State<MapPage> {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        setState(() {
-          _currentAddress = '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
-        });
+        if (mounted) {
+          setState(() {
+            _currentAddress = '${place.street ?? ''}, ${place.locality ?? ''}, ${place.postalCode ?? ''}, ${place.country ?? ''}';
+          });
+        }
       }
     } catch (e) {
       print('Error getting address: $e');
     }
   }
 
-  // Task 5: Geocoding - Search for a location by address
+  
   Future<void> _searchLocation(String address) async {
+    setState(() => _isLoading = true);
+
     try {
       List<Location> locations = await locationFromAddress(address);
 
       if (locations.isNotEmpty) {
         Location location = locations.first;
 
-        // Add marker for the searched location
+        
         setState(() {
           _markers.add(
             Marker(
@@ -200,16 +219,16 @@ class _MapPageState extends State<MapPage> {
               position: LatLng(location.latitude, location.longitude),
               infoWindow: InfoWindow(
                 title: address,
-                snippet: 'Searched location',
+                snippet: S.of(context).searched_location,
               ),
               icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
             ),
           );
         });
 
-        // Move camera to the searched location
+        
         final GoogleMapController controller = await _controller.future;
-        controller.animateCamera(
+        await controller.animateCamera(
           CameraUpdate.newCameraPosition(
             CameraPosition(
               target: LatLng(location.latitude, location.longitude),
@@ -219,9 +238,15 @@ class _MapPageState extends State<MapPage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not find location: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${S.of(context).not_find_location} $e")),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -230,15 +255,22 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(locationName),
-        content: const Text('This is additional information about this location.'),
+        content: Text(S.of(context).additional_info),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child:  Text(S.of(context).close),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> requestLocationPermission() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
+    }
   }
 
   @override
@@ -246,14 +278,12 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Task 2: Display Google Map with Markers
           GoogleMap(
             initialCameraPosition: _initialCameraPosition,
             markers: _markers,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
             },
-            // Task 4: Enable Map Gestures
             zoomGesturesEnabled: true,
             scrollGesturesEnabled: true,
             rotateGesturesEnabled: true,
@@ -262,16 +292,14 @@ class _MapPageState extends State<MapPage> {
             mapToolbarEnabled: true,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
-            // Handle map interactions
             onTap: (LatLng position) {
-              // Add new marker on tap
               setState(() {
                 _markers.add(
                   Marker(
                     markerId: MarkerId('tap_${DateTime.now().millisecondsSinceEpoch}'),
                     position: position,
-                    infoWindow: const InfoWindow(
-                      title: 'New Location',
+                    infoWindow:  InfoWindow(
+                      title: S.of(context).new_location,
                       snippet: 'Added by tapping',
                     ),
                   ),
@@ -279,39 +307,50 @@ class _MapPageState extends State<MapPage> {
               });
             },
             onCameraMove: (CameraPosition position) {
-              // You can track camera movement here
               print('Camera moved to: ${position.target}');
             },
           ),
-
-          // Show loading indicator
           if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: lottie.Lottie.asset('assets/loading.json'),
+                ),
+              ),
             ),
-
-          // Display current address
           if (_currentAddress.isNotEmpty)
             Positioned(
-              top: 16,
+              top: MediaQuery.of(context).padding.top + 16,
               left: 16,
               right: 16,
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Text(
-                  'Current Address: $_currentAddress',
+                   S.of(context).current_address + _currentAddress,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-
-          // Task 4: Map Control Buttons
           Positioned(
             right: 16,
             bottom: 100,
@@ -320,7 +359,8 @@ class _MapPageState extends State<MapPage> {
                 FloatingActionButton(
                   heroTag: 'zoomIn',
                   mini: true,
-                  child: const Icon(Icons.add),
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.add, color: Colors.black),
                   onPressed: () async {
                     final controller = await _controller.future;
                     controller.animateCamera(CameraUpdate.zoomIn());
@@ -330,11 +370,20 @@ class _MapPageState extends State<MapPage> {
                 FloatingActionButton(
                   heroTag: 'zoomOut',
                   mini: true,
-                  child: const Icon(Icons.remove),
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.remove, color: Colors.black),
                   onPressed: () async {
                     final controller = await _controller.future;
                     controller.animateCamera(CameraUpdate.zoomOut());
                   },
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  heroTag: 'search',
+                  mini: true,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.search, color: Colors.black),
+                  onPressed: showSearchDialog,
                 ),
               ],
             ),
@@ -343,7 +392,9 @@ class _MapPageState extends State<MapPage> {
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.my_location),
-        onPressed: _goToCurrentLocation,
+        onPressed: () {
+          _goToCurrentLocation();
+        },
       ),
     );
   }
@@ -354,11 +405,12 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Search Location'),
+        title: Text(S.of(context).search_for_location),
         content: TextField(
           controller: searchController,
-          decoration: const InputDecoration(
-            hintText: 'Enter address to search',
+          decoration:  InputDecoration(
+            hintText: S.of(context).enter_address_to_search,
+            border: OutlineInputBorder(),
           ),
           onSubmitted: (value) {
             if (value.isNotEmpty) {
@@ -370,7 +422,7 @@ class _MapPageState extends State<MapPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(S.of(context).cancel),
           ),
           TextButton(
             onPressed: () {
@@ -379,7 +431,7 @@ class _MapPageState extends State<MapPage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Search'),
+            child:  Text(S.of(context).search),
           ),
         ],
       ),
