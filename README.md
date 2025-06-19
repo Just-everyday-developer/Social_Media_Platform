@@ -1,16 +1,40 @@
-# social_media_platform
+# social media platform
+MVP Социальной платформы с системой постов
 
-A new Flutter project.
+Данный проект является попыткой воссоздать систему известной платформы Facebook
 
-## Getting Started
+# Features 
+- Google maps/геопозиция/геолокация
+- Подключен к внешнему API для получения актуальных новостей в виде списка
+- Авторизация и аутентификация через Google / Github / телефон / email
+- Используется база данных: Firebase
+- Применяется Provider для сложной логики 
+- Локализация на следующие языки: русский, казахский, английский
+- Внутренние анимации + Lottie анимации
 
-This project is a starting point for a Flutter application.
+# Launch
+```
+    git clone https://github.com/Just-everyday-developer/Social_Media_Platform.git
+    flutter pub get
+    flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+# Stack
+- dart/flutter
+- firebase
+- google_maps_flutter
+- flutter localization
+- local memory (sharedPreferences, sqlite)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Plans
+Добавить:
+- страницу бесконечных рилсов
+- поиск пользователей, групп (приглашения, подписки)
+- авторизацию через остальные платформы
+- страницу сообщений между пользователями
+- проверку на продолжительность неактивности пользователя
+- уведомления (разрабатывается)
+- продвинутые анимации
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Screenshots
+Вы можете просмотреть скриншоты приложения в папке output_screenshots 

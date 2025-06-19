@@ -102,8 +102,6 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Widget _getScreen(String location) {
     switch (location) {
-      case '/notifications':
-        return NotificationsPage();
       case '/settings':
         return const SettingsPage();
       case '/actions':

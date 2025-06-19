@@ -1055,7 +1055,7 @@ class S {
   }
 
   /// `{senderName} sent you a message: "{messageContent}"`
-  String notificationMessageBody({required Object senderName, required Object messageContent}) {
+  String notificationMessageBody(Object senderName, Object messageContent) {
     return Intl.message(
       '$senderName sent you a message: "$messageContent"',
       name: 'notificationMessageBody',
@@ -1075,7 +1075,7 @@ class S {
   }
 
   /// `Your app has been updated to version {version}. Check out the new features!`
-  String notificationSystemMessage({required Object version}) {
+  String notificationSystemMessage(Object version) {
     return Intl.message(
       'Your app has been updated to version $version. Check out the new features!',
       name: 'notificationSystemMessage',
@@ -1095,7 +1095,7 @@ class S {
   }
 
   /// `Don't forget about your meeting at {time} today.`
-  String notificationReminderMessage({required Object time}) {
+  String notificationReminderMessage(Object time) {
     return Intl.message(
       'Don\'t forget about your meeting at $time today.',
       name: 'notificationReminderMessage',
@@ -1115,7 +1115,7 @@ class S {
   }
 
   /// `Get {discount}% off on premium subscription. Limited time offer!`
-  String notificationPromotionMessage({required Object discount}) {
+  String notificationPromotionMessage(Object discount) {
     return Intl.message(
       'Get $discount% off on premium subscription. Limited time offer!',
       name: 'notificationPromotionMessage',
@@ -1135,7 +1135,7 @@ class S {
   }
 
   /// `New login detected from {browser} on {os}. Was this you?`
-  String notificationSecurityMessage({required Object browser, required Object os}) {
+  String notificationSecurityMessage(Object browser, Object os) {
     return Intl.message(
       'New login detected from $browser on $os. Was this you?',
       name: 'notificationSecurityMessage',
